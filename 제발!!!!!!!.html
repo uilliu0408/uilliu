@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+
+<html lang="ko">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>독서기록장 + 휴지통</title>
+<style>
+    body { font-family: sans-serif; background: #f9f6f1; margin: 0; padding: 0; }
+    header { background: #4a4e69; color: white; padding: 1rem; text-align: center; }
+    main { padding: 1rem; max-width: 800px; margin: auto; }
+    .box {
+      background: white; border-radius: 10px; padding: 1rem; margin-bottom: 1rem;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    input, textarea, button, select {
+      display: block; width: 100%; margin-top: 0.5rem;
+      padding: 0.5rem; font-size: 1rem; border-radius: 5px; border: 1px solid #ccc;
+    }
+    button {
+      background-color: #4a4e69; color: white; border: none; cursor: pointer;
+      margin-top: 1rem;
+    }
+    button:hover { background-color: #22223b; }
+    #entries, #trashBin, #bookForm { display: none; }
+    .entry, .trash-entry { margin-bottom: 1rem; }
+  </style>
+</head>
+<body>
+<header>
+<h1>🗂️ 독서기록장 + 🗑️ 휴지통 기능</h1>
+</header>
+<main>
+<div class="box" id="passwordSection">
+<label>비밀번호 입력</label>
+<input id="password" maxlength="4" type="password"/>
+<button onclick="checkPassword()">접속</button>
+<p id="passMsg" style="color:red;"></p>
+</div>
+<div class="box" id="bookForm">
+<label>책 제목</label><input id="title" type="text"/>
+<label>작가</label><input id="author" type="text"/>
+<label>읽은 날짜</label><input id="date" type="date"/>
+<label>책 내용 요약</label><textarea id="summary"></textarea>
+<label>인상 깊은 문장</label><textarea id="quote"></textarea>
+<label>책 관련 사진</label>
+<input accept="image/*" id="imageInput" onchange="handleImageUpload(event)" type="file"/>
+<label>별점</label>
+<select id="rating">
+<option value="⭐️">⭐️</option><option value="⭐️⭐️">⭐️⭐️</option>
+<option value="⭐️⭐️⭐️">⭐️⭐️⭐️</option><option value="⭐️⭐️⭐️⭐️">⭐️⭐️⭐️⭐️</option>
+<option value="⭐️⭐️⭐️⭐️⭐️">⭐️⭐️⭐️⭐️⭐️</option>
+</select>
+<button onclick="saveEntry()">기록 저장</button>
+<button onclick="toggleTrash()">휴지통 보기</button>
+<button onclick="toggleChangePassword()">비밀번호 변경</button>
+</div>
+<div class="box" id="changePasswordSection" style="display:none;">
+<label>기존 비밀번호</label><input id="oldPassword" maxlength="4" type="password"/>
+<label>새 비밀번호</label><input id="newPassword" maxlength="4" type="password"/>
+<button onclick="changePassword()">비밀번호 변경</button>
+<p id="changeMessage" style="color:red;"></p>
+</div>
+<hr/>
+<div id="entries"></div>
+<div class="box" id="trashBin">
+<h3>🗑️ 휴지통</h3>
+<div id="trashEntries"></div>
+<button onclick="clearTrash()">휴지통 비우기</button>
+</div>
+</main>
+
+<script>
+// URL에서 고유 ID 추출
+const urlParams = new URLSearchParams(window.location.search);
+const currentId = urlParams.get("id") || "default";
+
+// 고유 ID 기반 key 설정
+const passKey = `password_${currentId}`;
+const dataKey = `readingEntriesNFC_${currentId}`;
+const trashKey = `trashEntries_${currentId}`;
+</script>
+<script>
+    // 이 부분은 자동으로 설정됨
+
+    const checkPassword = () => {
+      const input = document.getElementById("password").value;
+      const stored = localStorage.getItem(passKey);
+      if (!stored) {
+        localStorage.setItem(passKey, input);
+        showMain();
+      } else if (input === stored) {
+        showMain();
+      } else {
+        document.getElementById("passMsg").textContent = "비밀번호가 일치하지 않습니다.";
+      }
+    };
+
+    const showMain = () => {
+      document.getElementById("passwordSection").style.display = "none";
+      document.getElementById("bookForm").style.display = "block";
+      document.getElementById("entries").style.display = "block";
+      displayEntries();
+    };
+
+    const saveEntry = () => {
+      const entry = {
+        title: document.getElementById("title").value,
+        author: document.getElementById("author").value,
+        date: document.getElementById("date").value,
+        summary: document.getElementById("summary").value,
+        quote: document.getElementById("quote").value,
+        rating: document.getElementById("rating").value,
+        image: uploadedImageBase64
+      };
+      let entries = JSON.parse(localStorage.getItem(dataKey) || "[]");
+      entries.push(entry);
+      localStorage.setItem(dataKey, JSON.stringify(entries));
+      displayEntries();
+      alert("기록이 저장되었습니다!");
+    };
+
+    const displayEntries = () => {
+      const entries = JSON.parse(localStorage.getItem(dataKey) || "[]");
+      const entriesDiv = document.getElementById("entries");
+      entriesDiv.innerHTML = "";
+      entries.forEach((entry, i) => {
+        entriesDiv.innerHTML += `
+          <div class="entry box">
+            <h3>${entry.title} - ${entry.author}</h3>
+            <p><strong>날짜:</strong> ${entry.date}</p>
+            <p><strong>요약:</strong> ${entry.summary}</p>
+            <p><strong>인상 깊은 문장:</strong> "${entry.quote}"</p>
+            <p><strong>별점:</strong> ${entry.rating}</p>
+            
+            ${entry.image ? `<img src="${entry.image}" style='max-width:100%; margin-top:0.5rem; cursor:pointer;' onclick='openModal("${entry.image}")'/>` : ""}
+
+            <button onclick="confirmDelete(${i})">삭제</button>
+          </div>
+        `;
+      });
+    };
+
+    const confirmDelete = (index) => {
+      if (confirm("휴지통으로 보내시겠습니까?")) {
+        let entries = JSON.parse(localStorage.getItem(dataKey) || "[]");
+        let trash = JSON.parse(localStorage.getItem(trashKey) || "[]");
+        trash.push(entries[index]);
+        entries.splice(index, 1);
+        localStorage.setItem(dataKey, JSON.stringify(entries));
+        localStorage.setItem(trashKey, JSON.stringify(trash));
+        displayEntries();
+      }
+    };
+
+    const toggleTrash = () => {
+      const bin = document.getElementById("trashBin");
+      bin.style.display = bin.style.display === "block" ? "none" : "block";
+      displayTrash();
+    };
+
+    const displayTrash = () => {
+      const trash = JSON.parse(localStorage.getItem(trashKey) || "[]");
+      const trashDiv = document.getElementById("trashEntries");
+      trashDiv.innerHTML = "";
+      trash.forEach((entry, i) => {
+        trashDiv.innerHTML += `
+          <div class="trash-entry box">
+            <h4>${entry.title} - ${entry.author}</h4>
+            <button onclick="restoreEntry(${i})">복구</button>
+          </div>
+        `;
+      });
+    };
+
+    const restoreEntry = (index) => {
+      let trash = JSON.parse(localStorage.getItem(trashKey) || "[]");
+      let entries = JSON.parse(localStorage.getItem(dataKey) || "[]");
+      entries.push(trash[index]);
+      trash.splice(index, 1);
+      localStorage.setItem(dataKey, JSON.stringify(entries));
+      localStorage.setItem(trashKey, JSON.stringify(trash));
+      displayEntries();
+      displayTrash();
+    };
+
+    
+    const toggleChangePassword = () => {
+      const section = document.getElementById("changePasswordSection");
+      section.style.display = section.style.display === "block" ? "none" : "block";
+    };
+
+    const changePassword = () => {
+      const oldPass = document.getElementById("oldPassword").value;
+      const newPass = document.getElementById("newPassword").value;
+      const storedPass = localStorage.getItem(passKey);
+      if (oldPass === storedPass && newPass.length === 4) {
+        localStorage.setItem(passKey, newPass);
+        document.getElementById("changeMessage").textContent = "비밀번호가 변경되었습니다.";
+      } else {
+        document.getElementById("changeMessage").textContent = "입력한 정보가 올바르지 않습니다.";
+      }
+    };
+
+
+    let uploadedImageBase64 = "";
+
+    const handleImageUpload = (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        uploadedImageBase64 = reader.result;
+      };
+      reader.readAsDataURL(file);
+    };
+
+
+    const openModal = (src) => {
+      const modal = document.getElementById("imageModal");
+      const img = document.getElementById("modalImage");
+      img.src = src;
+      modal.style.display = "flex";
+    };
+
+    const closeModal = () => {
+      const modal = document.getElementById("imageModal");
+      modal.style.display = "none";
+      document.getElementById("modalImage").src = "";
+    };
+
+const clearTrash = () => {
+      if (confirm("휴지통을 완전히 비우시겠습니까?")) {
+        localStorage.setItem(trashKey, JSON.stringify([]));
+        displayTrash();
+      }
+    };
+  </script>
+<div id="imageModal" onclick="closeModal()" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%;
+       background-color:rgba(0,0,0,0.9); z-index:9999; justify-content:center; align-items:center;">
+<img id="modalImage" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%);
+         max-width:95%; max-height:95%; box-shadow:0 0 30px rgba(255,255,255,0.5); border-radius:10px;"/>
+</div>
+</body>
+</html>
