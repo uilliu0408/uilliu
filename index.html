@@ -1,11 +1,10 @@
 <!DOCTYPE html>
-
 <html lang="ko">
 <head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>독서기록장 + 휴지통</title>
-<style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>독서기록장 + 휴지통</title>
+  <style>
     body { font-family: sans-serif; background: #f9f6f1; margin: 0; padding: 0; }
     header { background: #4a4e69; color: white; padding: 1rem; text-align: center; }
     main { padding: 1rem; max-width: 800px; margin: auto; }
@@ -27,61 +26,59 @@
   </style>
 </head>
 <body>
-<header>
-<h1>🗂️ 독서기록장 + 🗑️ 휴지통 기능</h1>
-</header>
-<main>
-<div class="box" id="passwordSection">
-<label>비밀번호 입력</label>
-<input id="password" maxlength="4" type="password"/>
-<button onclick="checkPassword()">접속</button>
-<p id="passMsg" style="color:red;"></p>
-</div>
-<div class="box" id="bookForm">
-<label>책 제목</label><input id="title" type="text"/>
-<label>작가</label><input id="author" type="text"/>
-<label>읽은 날짜</label><input id="date" type="date"/>
-<label>책 내용 요약</label><textarea id="summary"></textarea>
-<label>인상 깊은 문장</label><textarea id="quote"></textarea>
-<label>책 관련 사진</label>
-<input accept="image/*" id="imageInput" onchange="handleImageUpload(event)" type="file"/>
-<label>별점</label>
-<select id="rating">
-<option value="⭐️">⭐️</option><option value="⭐️⭐️">⭐️⭐️</option>
-<option value="⭐️⭐️⭐️">⭐️⭐️⭐️</option><option value="⭐️⭐️⭐️⭐️">⭐️⭐️⭐️⭐️</option>
-<option value="⭐️⭐️⭐️⭐️⭐️">⭐️⭐️⭐️⭐️⭐️</option>
-</select>
-<button onclick="saveEntry()">기록 저장</button>
-<button onclick="toggleTrash()">휴지통 보기</button>
+  <header>
+    <h1>🗂️ 독서기록장 + 🗑️ 휴지통 기능</h1>
+  </header>
+  <main>
+    <div class="box" id="passwordSection">
+      <label>비밀번호 입력</label>
+      <input type="password" id="password" maxlength="4" />
+      <button onclick="checkPassword()">접속</button>
+      <p id="passMsg" style="color:red;"></p>
+    </div>
+
+    <div id="bookForm" class="box">
+      <label>책 제목</label><input id="title" type="text" />
+      <label>작가</label><input id="author" type="text" />
+      <label>읽은 날짜</label><input id="date" type="date" />
+      <label>책 내용 요약</label><textarea id="summary"></textarea>
+      <label>인상 깊은 문장</label><textarea id="quote"></textarea>
+      
+      <label>책 관련 사진</label>
+      <input type="file" id="imageInput" accept="image/*" onchange="handleImageUpload(event)" />
+
+      <label>별점</label>
+      <select id="rating">
+        <option value="⭐️">⭐️</option><option value="⭐️⭐️">⭐️⭐️</option>
+        <option value="⭐️⭐️⭐️">⭐️⭐️⭐️</option><option value="⭐️⭐️⭐️⭐️">⭐️⭐️⭐️⭐️</option>
+        <option value="⭐️⭐️⭐️⭐️⭐️">⭐️⭐️⭐️⭐️⭐️</option>
+      </select>
+      <button onclick="saveEntry()">기록 저장</button>
+      <button onclick="toggleTrash()">휴지통 보기</button>
 <button onclick="toggleChangePassword()">비밀번호 변경</button>
-</div>
-<div class="box" id="changePasswordSection" style="display:none;">
-<label>기존 비밀번호</label><input id="oldPassword" maxlength="4" type="password"/>
-<label>새 비밀번호</label><input id="newPassword" maxlength="4" type="password"/>
-<button onclick="changePassword()">비밀번호 변경</button>
-<p id="changeMessage" style="color:red;"></p>
-</div>
-<hr/>
-<div id="entries"></div>
-<div class="box" id="trashBin">
-<h3>🗑️ 휴지통</h3>
-<div id="trashEntries"></div>
-<button onclick="clearTrash()">휴지통 비우기</button>
-</div>
-</main>
+    </div>
 
-<script>
-// URL에서 고유 ID 추출
-const urlParams = new URLSearchParams(window.location.search);
-const currentId = urlParams.get("id") || "default";
+    
+    <div id="changePasswordSection" class="box" style="display:none;">
+      <label>기존 비밀번호</label><input type="password" id="oldPassword" maxlength="4"/>
+      <label>새 비밀번호</label><input type="password" id="newPassword" maxlength="4"/>
+      <button onclick="changePassword()">비밀번호 변경</button>
+      <p id="changeMessage" style="color:red;"></p>
+    </div>
 
-// 고유 ID 기반 key 설정
-const passKey = `password_${currentId}`;
-const dataKey = `readingEntriesNFC_${currentId}`;
-const trashKey = `trashEntries_${currentId}`;
-</script>
-<script>
-    // 이 부분은 자동으로 설정됨
+<hr />
+    <div id="entries"></div>
+    <div id="trashBin" class="box">
+      <h3>🗑️ 휴지통</h3>
+      <div id="trashEntries"></div>
+      <button onclick="clearTrash()">휴지통 비우기</button>
+    </div>
+  </main>
+
+  <script>
+    const passKey = "password_default";
+    const dataKey = "readingEntriesNFC_default";
+    const trashKey = "trashEntries_default";
 
     const checkPassword = () => {
       const input = document.getElementById("password").value;
@@ -100,7 +97,7 @@ const trashKey = `trashEntries_${currentId}`;
       document.getElementById("passwordSection").style.display = "none";
       document.getElementById("bookForm").style.display = "block";
       document.getElementById("entries").style.display = "block";
-      displayEntries();
+      displayEntries(); saveRoomData();
     };
 
     const saveEntry = () => {
@@ -116,8 +113,8 @@ const trashKey = `trashEntries_${currentId}`;
       let entries = JSON.parse(localStorage.getItem(dataKey) || "[]");
       entries.push(entry);
       localStorage.setItem(dataKey, JSON.stringify(entries));
-      displayEntries();
-      alert("기록이 저장되었습니다!");
+      displayEntries(); saveRoomData();
+      alert("기록이 저장되었습니다!"); saveRoomData();
     };
 
     const displayEntries = () => {
@@ -149,14 +146,14 @@ const trashKey = `trashEntries_${currentId}`;
         entries.splice(index, 1);
         localStorage.setItem(dataKey, JSON.stringify(entries));
         localStorage.setItem(trashKey, JSON.stringify(trash));
-        displayEntries();
+        displayEntries(); saveRoomData();
       }
     };
 
     const toggleTrash = () => {
       const bin = document.getElementById("trashBin");
       bin.style.display = bin.style.display === "block" ? "none" : "block";
-      displayTrash();
+      displayTrash(); saveRoomData();
     };
 
     const displayTrash = () => {
@@ -180,8 +177,8 @@ const trashKey = `trashEntries_${currentId}`;
       trash.splice(index, 1);
       localStorage.setItem(dataKey, JSON.stringify(entries));
       localStorage.setItem(trashKey, JSON.stringify(trash));
-      displayEntries();
-      displayTrash();
+      displayEntries(); saveRoomData();
+      displayTrash(); saveRoomData();
     };
 
     
@@ -196,7 +193,7 @@ const trashKey = `trashEntries_${currentId}`;
       const storedPass = localStorage.getItem(passKey);
       if (oldPass === storedPass && newPass.length === 4) {
         localStorage.setItem(passKey, newPass);
-        document.getElementById("changeMessage").textContent = "비밀번호가 변경되었습니다.";
+        document.getElementById("changeMessage").textContent = "비밀번호가 변경되었습니다."; saveRoomData();
       } else {
         document.getElementById("changeMessage").textContent = "입력한 정보가 올바르지 않습니다.";
       }
@@ -232,14 +229,62 @@ const trashKey = `trashEntries_${currentId}`;
 const clearTrash = () => {
       if (confirm("휴지통을 완전히 비우시겠습니까?")) {
         localStorage.setItem(trashKey, JSON.stringify([]));
-        displayTrash();
+        displayTrash(); saveRoomData();
       }
     };
   </script>
-<div id="imageModal" onclick="closeModal()" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%;
+
+  <div id="imageModal" onclick="closeModal()" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%;
        background-color:rgba(0,0,0,0.9); z-index:9999; justify-content:center; align-items:center;">
-<img id="modalImage" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%);
-         max-width:95%; max-height:95%; box-shadow:0 0 30px rgba(255,255,255,0.5); border-radius:10px;"/>
-</div>
+    <img id="modalImage" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%);
+         max-width:95%; max-height:95%; box-shadow:0 0 30px rgba(255,255,255,0.5); border-radius:10px;" />
+  </div>
+
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+  import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCwf8YefXWjheKg5SYjWUqA0khJu37pMGk",
+    authDomain: "chat-38c87.firebaseapp.com",
+    projectId: "chat-38c87",
+    storageBucket: "chat-38c87.firebasestorage.app",
+    messagingSenderId: "173428820608",
+    appId: "1:173428820608:web:e160cacff277f35a253465",
+    measurementId: "G-KRX6BP913S"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const roomId = urlParams.get("id") || "default";
+
+  const getRoomRef = () => doc(db, "rooms", roomId);
+
+  async function loadRoomData() {
+    const docSnap = await getDoc(getRoomRef());
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      if (data.entries) localStorage.setItem("readingEntriesNFC_default", JSON.stringify(data.entries));
+      if (data.trash) localStorage.setItem("trashEntries_default", JSON.stringify(data.trash));
+      if (data.password) localStorage.setItem("password_default", data.password);
+    }
+  }
+
+  async function saveRoomData() {
+    const entries = JSON.parse(localStorage.getItem("readingEntriesNFC_default") || "[]");
+    const trash = JSON.parse(localStorage.getItem("trashEntries_default") || "[]");
+    const password = localStorage.getItem("password_default") || "";
+    await setDoc(getRoomRef(), { entries, trash, password });
+  }
+
+  window.saveRoomData = saveRoomData;
+
+  // 처음 로드 시 Firebase에서 데이터 불러오기
+  loadRoomData();
+</script>
+
 </body>
 </html>
